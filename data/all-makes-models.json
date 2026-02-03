@@ -1,0 +1,166 @@
+{
+  "makes": [
+    {
+      "slug": "toyota",
+      "name": "Toyota",
+      "models": [
+        {"slug": "prius", "name": "Prius"},
+        {"slug": "prius-prime", "name": "Prius Prime"},
+        {"slug": "camry", "name": "Camry"},
+        {"slug": "corolla", "name": "Corolla"},
+        {"slug": "corolla-cross", "name": "Corolla Cross"},
+        {"slug": "rav4", "name": "RAV4"},
+        {"slug": "highlander", "name": "Highlander"},
+        {"slug": "grand-highlander", "name": "Grand Highlander"},
+        {"slug": "4runner", "name": "4Runner"},
+        {"slug": "land-cruiser", "name": "Land Cruiser"},
+        {"slug": "land-cruiser-prado", "name": "Land Cruiser Prado"},
+        {"slug": "tacoma", "name": "Tacoma"},
+        {"slug": "tundra", "name": "Tundra"},
+        {"slug": "c-hr", "name": "C-HR"},
+        {"slug": "bz4x", "name": "bZ4X"},
+        {"slug": "alphard", "name": "Alphard"},
+        {"slug": "voxy", "name": "Voxy"},
+        {"slug": "noah", "name": "Noah"},
+        {"slug": "harrier", "name": "Harrier"},
+        {"slug": "crown", "name": "Crown"},
+        {"slug": "yaris", "name": "Yaris"},
+        {"slug": "yaris-cross", "name": "Yaris Cross"},
+        {"slug": "sienta", "name": "Sienta"},
+        {"slug": "roomy", "name": "Roomy"},
+        {"slug": "raize", "name": "Raize"}
+      ]
+    },
+    {
+      "slug": "lexus",
+      "name": "Lexus",
+      "models": [
+        {"slug": "es", "name": "ES"},
+        {"slug": "is", "name": "IS"},
+        {"slug": "nx", "name": "NX"},
+        {"slug": "rx", "name": "RX"},
+        {"slug": "gx", "name": "GX"},
+        {"slug": "lx", "name": "LX"},
+        {"slug": "tx", "name": "TX"},
+        {"slug": "ux", "name": "UX"},
+        {"slug": "rz", "name": "RZ"},
+        {"slug": "ls", "name": "LS"},
+        {"slug": "lc", "name": "LC"},
+        {"slug": "rc", "name": "RC"}
+      ]
+    },
+    {
+      "slug": "nissan",
+      "name": "Nissan",
+      "models": [
+        {"slug": "note", "name": "Note"},
+        {"slug": "serena", "name": "Serena"},
+        {"slug": "x-trail", "name": "X-Trail"},
+        {"slug": "rogue", "name": "Rogue"},
+        {"slug": "pathfinder", "name": "Pathfinder"},
+        {"slug": "murano", "name": "Murano"},
+        {"slug": "ariya", "name": "Ariya"},
+        {"slug": "leaf", "name": "Leaf"},
+        {"slug": "sentra", "name": "Sentra"},
+        {"slug": "altima", "name": "Altima"},
+        {"slug": "versa", "name": "Versa"},
+        {"slug": "kicks", "name": "Kicks"},
+        {"slug": "juke", "name": "Juke"}
+      ]
+    },
+    {
+      "slug": "honda",
+      "name": "Honda",
+      "models": [
+        {"slug": "fit", "name": "Fit"},
+        {"slug": "civic", "name": "Civic"},
+        {"slug": "accord", "name": "Accord"},
+        {"slug": "cr-v", "name": "CR-V"},
+        {"slug": "hr-v", "name": "HR-V"},
+        {"slug": "pilot", "name": "Pilot"},
+        {"slug": "passport", "name": "Passport"},
+        {"slug": "odyssey", "name": "Odyssey"},
+        {"slug": "freed", "name": "Freed"},
+        {"slug": "stepwgn", "name": "Stepwgn"},
+        {"slug": "vezel", "name": "Vezel"}
+      ]
+    },
+    {
+      "slug": "subaru",
+      "name": "Subaru",
+      "models": [
+        {"slug": "impreza", "name": "Impreza"},
+        {"slug": "crosstrek", "name": "Crosstrek"},
+        {"slug": "forester", "name": "Forester"},
+        {"slug": "outback", "name": "Outback"},
+        {"slug": "legacy", "name": "Legacy"},
+        {"slug": "ascent", "name": "Ascent"},
+        {"slug": "solterra", "name": "Solterra"}
+      ]
+    },
+    {
+      "slug": "mazda",
+      "name": "Mazda",
+      "models": [
+        {"slug": "2", "name": "2"},
+        {"slug": "3", "name": "3"},
+        {"slug": "6", "name": "6"},
+        {"slug": "cx-3", "name": "CX-3"},
+        {"slug": "cx-30", "name": "CX-30"},
+        {"slug": "cx-5", "name": "CX-5"},
+        {"slug": "cx-50", "name": "CX-50"},
+        {"slug": "cx-70", "name": "CX-70"},
+        {"slug": "cx-90", "name": "CX-90"},
+        {"slug": "mx-5-miata", "name": "MX-5 Miata"}
+      ]
+    },
+    {
+      "slug": "mitsubishi",
+      "name": "Mitsubishi",
+      "models": [
+        {"slug": "outlander", "name": "Outlander"},
+        {"slug": "eclipse-cross", "name": "Eclipse Cross"},
+        {"slug": "mirage", "name": "Mirage"},
+        {"slug": "l200", "name": "L200"},
+        {"slug": "xpander", "name": "Xpander"},
+        {"slug": "pajero-sport", "name": "Pajero Sport"}
+      ]
+    },
+    {
+      "slug": "suzuki",
+      "name": "Suzuki",
+      "models": [
+        {"slug": "swift", "name": "Swift"},
+        {"slug": "vitara", "name": "Vitara"},
+        {"slug": "jimny", "name": "Jimny"},
+        {"slug": "ignis", "name": "Ignis"},
+        {"slug": "xl7", "name": "XL7"},
+        {"slug": "across", "name": "Across"}
+      ]
+    },
+    {
+      "slug": "bmw",
+      "name": "BMW",
+      "models": [
+        {"slug": "1-series", "name": "1 Series"},
+        {"slug": "2-series", "name": "2 Series"},
+        {"slug": "3-series", "name": "3 Series"},
+        {"slug": "4-series", "name": "4 Series"},
+        {"slug": "5-series", "name": "5 Series"},
+        {"slug": "7-series", "name": "7 Series"},
+        {"slug": "x1", "name": "X1"},
+        {"slug": "x2", "name": "X2"},
+        {"slug": "x3", "name": "X3"},
+        {"slug": "x4", "name": "X4"},
+        {"slug": "x5", "name": "X5"},
+        {"slug": "x6", "name": "X6"},
+        {"slug": "x7", "name": "X7"},
+        {"slug": "xm", "name": "XM"},
+        {"slug": "i4", "name": "i4"},
+        {"slug": "i5", "name": "i5"},
+        {"slug": "i7", "name": "i7"},
+        {"slug": "ix", "name": "iX"}
+      ]
+    }
+  ]
+}

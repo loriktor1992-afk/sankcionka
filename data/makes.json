@@ -1,0 +1,22 @@
+[
+  {"slug": "toyota", "name": "Toyota", "modelsCount": 15420},
+  {"slug": "nissan", "name": "Nissan", "modelsCount": 8240},
+  {"slug": "honda", "name": "Honda", "modelsCount": 6150},
+  {"slug": "subaru", "name": "Subaru", "modelsCount": 3420},
+  {"slug": "mazda", "name": "Mazda", "modelsCount": 2890},
+  {"slug": "mitsubishi", "name": "Mitsubishi", "modelsCount": 2150},
+  {"slug": "suzuki", "name": "Suzuki", "modelsCount": 1840},
+  {"slug": "bmw", "name": "BMW", "modelsCount": 1260},
+  {"slug": "abarth", "name": "Abarth", "modelsCount": 45},
+  {"slug": "lexus", "name": "Lexus", "modelsCount": 980},
+  {"slug": "volkswagen", "name": "Volkswagen", "modelsCount": 1120},
+  {"slug": "mercedes", "name": "Mercedes", "modelsCount": 1450},
+  {"slug": "chrysler", "name": "Chrysler", "modelsCount": 85},
+  {"slug": "daihatsu", "name": "Daihatsu", "modelsCount": 640},
+  {"slug": "land-rover", "name": "Land Rover", "modelsCount": 320},
+  {"slug": "maserati", "name": "Maserati", "modelsCount": 28},
+  {"slug": "mini", "name": "Mini", "modelsCount": 115},
+  {"slug": "porsche", "name": "Porsche", "modelsCount": 94},
+  {"slug": "smart", "name": "MCC SMART", "modelsCount": 56},
+  {"slug": "ducati", "name": "DUCATI", "modelsCount": 12}
+]

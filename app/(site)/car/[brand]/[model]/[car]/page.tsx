@@ -1,12 +1,24 @@
 import Link from 'next/link';
-import catalog from '../../../../data/catalog.json';
+import fs from 'fs/promises';
+import path from 'path';
+
+async function getCar(make: string, model: string, carSlug: string) {
+  const filePath = path.join(process.cwd(), 'data/models', `${make}.json`);
+  try {
+    const data = await fs.readFile(filePath, 'utf-8');
+    const cars = JSON.parse(data);
+    if (!Array.isArray(cars)) return null;
+    return cars.find((c: any) => c.slug === carSlug) || null;
+  } catch (err) {
+    console.error('Ошибка чтения авто:', err);
+    return null;
+  }
+}
 
 export default async function CarPage({ params }: { params: Promise<{ brand: string; model: string; car: string }> }) {
-  const { brand, model, car } = await params;
+  const { brand, model, car: carSlug } = await params;
 
-  const brandData = catalog.brands.find(b => b.slug === brand);
-  const markData = brandData?.marks.find(m => m.slug === model);
-  const auto = markData?.cars.find(c => c.slug === car);
+  const auto = await getCar(brand, model, carSlug);
 
   if (!auto) {
     return <div>Авто не найдено</div>;
@@ -19,13 +31,13 @@ export default async function CarPage({ params }: { params: Promise<{ brand: str
           ← Назад к модели {model}
         </Link>
 
-        <h1 className="text-4xl font-bold mb-10">{auto.name}</h1>
+        <h1 className="text-4xl font-bold mb-10">{auto.model || auto.name}</h1>
 
         {/* Галерея 20+ фото */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-6">Галерея ( {auto.photos.length} фото )</h2>
+          <h2 className="text-3xl font-bold mb-6">Галерея ( {auto.photos?.length || 0} фото )</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {auto.photos.map(photo => (
+            {auto.photos?.map((photo: string) => (
               <img key={photo} src={photo} alt="Фото" className="w-full h-48 object-cover rounded" />
             ))}
           </div>

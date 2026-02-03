@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 
 type Car = {
@@ -22,12 +23,7 @@ type Car = {
 };
 
 function slugify(value: string) {
-  return value
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9а-яё\s-]/gi, '')
-    .replace(/\s+/g, '-');
+  return value.toString().trim().toLowerCase().replace(/[^a-z0-9а-яё\s-]/gi, '').replace(/\s+/g, '-');
 }
 
 function toNumber(value: string | undefined | null): number | null {
@@ -38,224 +34,123 @@ function toNumber(value: string | undefined | null): number | null {
   return Number.isNaN(num) ? null : num;
 }
 
-type Brand = {
-  slug: string;
-  name: string;
-  modelsCount: number;
-  // grades убраны с главной страницы
-};
+function extractYear(yearStr: string | undefined): number | null {
+  if (!yearStr) return null;
+  const match = yearStr.match(/\d{4}/);
+  if (!match) return null;
+  return parseInt(match[0], 10);
+}
 
-export default function Home() {
-  const [search, setSearch] = useState({
-    brand: '',
-    model: '',
-    mileageFrom: '',
-    mileageTo: '',
-    priceFrom: '',
-    priceTo: '',
-    transmission: '',
-    drive: '',
-  });
+function SearchContent() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get('q')?.toLowerCase() || '';
+  const yearFrom = parseInt(searchParams.get('yearFrom') || '0') || 0;
+  const yearTo = parseInt(searchParams.get('yearTo') || '9999') || 9999;
+  const priceFrom = parseInt(searchParams.get('priceFrom') || '0') || 0;
+  const priceTo = parseInt(searchParams.get('priceTo') || '999999999') || 999999999;
+  const fuel = searchParams.get('fuel')?.toLowerCase() || '';
+  const drive = searchParams.get('drive')?.toLowerCase() || '';
+  const transmission = searchParams.get('transmission')?.toLowerCase() || '';
 
   const [cars, setCars] = useState<Car[]>([]);
-  const [topCars, setTopCars] = useState<Car[]>([]);
-  const [allBrands, setAllBrands] = useState<Brand[]>([]);
+  const [results, setResults] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const carouselRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    async function load() {
+    async function loadCars() {
       try {
-        setLoading(true);
-        setError(null);
-
-        const [carsRes, topRes, brandsRes] = await Promise.all([
-          fetch('/api/cars'),
-          fetch('/api/top-cars'),
-          fetch('/api/get-makes'), // Нам нужно убедиться что этот эндпоинт есть или возвращает makes.json
-        ]);
-
-        const carsData: Car[] = await carsRes.json();
-        const topData: Car[] = await topRes.json();
-        const brandsData: Brand[] = await brandsRes.json();
-
-        setCars(carsData);
-        setTopCars(topData);
-        setAllBrands(brandsData);
-      } catch (e) {
-        console.error(e);
-        setError('Не удалось загрузить данные');
+        const res = await fetch('/api/cars');
+        const data: Car[] = await res.json();
+        setCars(data.filter(c => c.status !== 'sold'));
+      } catch (err) {
+        console.error('Ошибка загрузки автомобилей:', err);
       } finally {
         setLoading(false);
       }
     }
-
-    load();
+    loadCars();
   }, []);
 
-  const brands = useMemo(
-    () => Array.from(new Set(cars.map(car => car.make))).sort(),
-    [cars]
-  );
-
-  const modelsForBrand = useMemo(() => {
-    const subset = search.brand ? cars.filter(car => car.make === search.brand) : cars;
-    return Array.from(new Set(subset.map(car => car.model))).sort();
-  }, [cars, search.brand]);
-
-  const handleSearchChange = (e: any) => {
-    const { name, value } = e.target;
-    setSearch(prev => ({ ...prev, [name]: value }));
-  };
-
-  const scrollCarousel = (direction: 'left' | 'right') => {
-    if (!carouselRef.current) return;
-    const container = carouselRef.current;
-    const amount = container.clientWidth * 0.8;
-    const delta = direction === 'left' ? -amount : amount;
-    container.scrollBy({ left: delta, behavior: 'smooth' });
-  };
-
-  // Подсчет общего количества авто
-  const totalCars = cars.length;
+  useEffect(() => {
+    let filtered = cars;
+    if (q) {
+      filtered = filtered.filter(c => c.make.toLowerCase().includes(q) || c.model.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q));
+    }
+    if (yearFrom > 0) {
+      filtered = filtered.filter(c => {
+        const year = extractYear(c.year || c.yearMonth);
+        return year ? year >= yearFrom : true;
+      });
+    }
+    if (yearTo < 9999) {
+      filtered = filtered.filter(c => {
+        const year = extractYear(c.year || c.yearMonth);
+        return year ? year <= yearTo : true;
+      });
+    }
+    if (priceFrom > 0) {
+      filtered = filtered.filter(c => {
+        const price = toNumber(c.price);
+        return price ? price >= priceFrom : true;
+      });
+    }
+    if (priceTo < 999999999) {
+      filtered = filtered.filter(c => {
+        const price = toNumber(c.price);
+        return price ? price <= priceTo : true;
+      });
+    }
+    if (fuel) filtered = filtered.filter(c => c.fuel?.toLowerCase().includes(fuel));
+    if (drive) filtered = filtered.filter(c => c.drive?.toLowerCase().includes(drive));
+    if (transmission) filtered = filtered.filter(c => c.transmission?.toLowerCase().includes(transmission));
+    setResults(filtered);
+  }, [cars, q, yearFrom, yearTo, priceFrom, priceTo, fuel, drive, transmission]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Градиентный хедер с логотипом и счетчиком */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 shadow-2xl">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            {/* Логотип */}
-            <div className="flex items-center gap-4 group">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 transform rotate-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M5 18.5c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V12H5v6.5zm12.5-9c.8 0 1.5-.7 1.5-1.5S18.3 6.5 17.5 6.5 16 7.2 16 8s.7 1.5 1.5 1.5zM7.5 9C8.3 9 9 8.3 9 7.5S8.3 6 7.5 6 6 6.7 6 7.5 6.7 9 7.5 9z" />
-                    <circle cx="17.5" cy="8" r="1.5" />
-                    <circle cx="7.5" cy="8" r="1.5" />
-                  </svg>
-                </div>
-                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl opacity-0 group-hover:opacity-30 blur transition-opacity duration-300"></div>
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight group-hover:text-yellow-300 transition-colors duration-300">
-                  TachkiMarket<span className="text-yellow-300">.ru</span>
-                </h1>
-                <p className="text-blue-100 text-sm font-medium mt-1 max-w-lg">
-                  Автомобили с нашей стоянки в Японии без пробега по России и под заказ с аукционов Японии
-                </p>
-
-              </div>
-            </div>
-            
-            {/* Счетчик авто */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl px-8 py-5 border border-white/20 shadow-lg transform hover:scale-105 transition-transform duration-300">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-white">{totalCars.toLocaleString()}</div>
-                <div className="text-blue-100 text-sm font-medium mt-1">авто в наличии</div>
-              </div>
-            </div>
-          </div>
+    <div className="container mx-auto px-4">
+      <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Результаты поиска</h1>
+      {loading ? <p className="text-lg text-gray-600 mb-8">Загрузка...</p> : <p className="text-lg text-gray-600 mb-8">Найдено <strong className="text-blue-600">{results.length}</strong> автомобилей</p>}
+      {!loading && results.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
+          <p className="text-2xl text-gray-700 mb-4 font-semibold">Ничего не найдено</p>
+          <p className="text-gray-600 mb-6">Попробуйте изменить параметры поиска</p>
+          <Link href="/" className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Вернуться на главную</Link>
         </div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-12">
-        <div className="w-full">
-          {/* Карусель топовых авто */}
-          <div className="mb-16">
-            <h2 className="text-3xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-              <span className="bg-gradient-to-r from-red-500 to-orange-500 text-transparent bg-clip-text">🔥</span>
-              Самые выгодные предложения
-            </h2>
-            {topCars.length === 0 ? (
-              <div className="bg-white/50 backdrop-blur rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center">
-                <p className="text-gray-500 text-lg">Администратор пока не добавил авто в карусель.</p>
-              </div>
-            ) : (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => scrollCarousel('left')}
-                  className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200"
-                >
-                  <span className="text-3xl text-gray-700">‹</span>
-                </button>
-                <div
-                  ref={carouselRef}
-                  className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth scrollbar-hide"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {topCars.map(car => (
-                    <Link
-                      key={car.slug}
-                      href={`/instance/${car.make}/${slugify(car.model)}/${car.slug}`}
-                      className="flex-shrink-0 w-[280px] bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden snap-start group"
-                    >
-                      {car.photos && car.photos[0] && (
-                        <div className="relative overflow-hidden aspect-video">
-                          <img
-                            src={car.photos[0]}
-                            alt={car.model}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                          <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                            ХИТ!
-                          </div>
-                        </div>
-                      )}
-                      <div className="p-5">
-                        <p className="text-3xl font-bold text-green-600 mb-2">
-                          {car.price ? `${toNumber(car.price)?.toLocaleString()} ₽` : 'Цена по запросу'}
-                        </p>
-                        <p className="text-sm text-gray-500 mb-1">{car.make?.toUpperCase()}</p>
-                        <p className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition">
-                          {car.model}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-2">
-                          {car.year || car.yearMonth || ''} {car.mileage ? `• ${toNumber(car.mileage)?.toLocaleString()} км` : ''}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {results.map((car) => (
+            <Link key={car.slug} href={`/instance/${car.make}/${slugify(car.model)}/${car.slug}`} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group">
+              {car.photos && car.photos[0] ? (
+                <div className="aspect-video overflow-hidden bg-gray-100">
+                  <img src={car.photos[0]} alt={car.model} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => scrollCarousel('right')}
-                  className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200"
-                >
-                  <span className="text-3xl text-gray-700">›</span>
-                </button>
+              ) : <div className="aspect-video bg-gray-200 flex items-center justify-center text-gray-400">Нет фото</div>}
+              <div className="p-5">
+                <p className="text-sm text-gray-500 mb-1">{car.make?.toUpperCase()}</p>
+                <h2 className="text-xl font-bold mb-2 text-gray-900 group-hover:text-blue-600 transition">{car.model}</h2>
+                <p className="text-gray-600 mb-3 text-sm">{car.year || car.yearMonth || '—'}</p>
+                <div className="text-sm text-gray-600 mb-4 space-y-1">
+                  {car.fuel && <p>Топливо: <span className="font-semibold">{car.fuel}</span></p>}
+                  {car.drive && <p>Привод: <span className="font-semibold">{car.drive}</span></p>}
+                  {car.transmission && <p>КПП: <span className="font-semibold">{car.transmission}</span></p>}
+                  {car.mileage && <p>Пробег: <span className="font-semibold">{toNumber(car.mileage)?.toLocaleString()} км</span></p>}
+                </div>
+                <p className="text-2xl font-bold text-green-600">{car.price ? `${toNumber(car.price)?.toLocaleString()} ₽` : 'По запросу'}</p>
               </div>
-            )}
-          </div>
-
-          {/* Основная сетка брендов */}
-          <h2 className="text-3xl font-bold mb-6 text-gray-900 flex items-center gap-3 mt-16">
-            <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">🚗</span>
-            Популярные бренды
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
-            {allBrands.map(brand => (
-              <Link
-                key={brand.slug}
-                href={`/marka/${brand.slug}`}
-                className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 p-6 text-center overflow-hidden border border-gray-100 hover:border-blue-300"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/10 group-hover:to-purple-500/10 transition-all duration-500" />
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
-                <p className="relative text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-300 mb-2">
-                  {brand.name}
-                </p>
-                <p className="relative text-xs text-gray-500 font-medium group-hover:text-gray-700 transition-colors">
-                  {brand.modelsCount.toLocaleString()} предложений
-                </p>
-                <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </Link>
-            ))}
-          </div>
+            </Link>
+          ))}
         </div>
-      </div>
+      )}
+    </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-10">
+      <Suspense fallback={<div className="container mx-auto px-4"><p className="text-lg">Загрузка...</p></div>}>
+        <SearchContent />
+      </Suspense>
     </main>
   );
 }

@@ -3,66 +3,51 @@ import fs from 'fs/promises';
 import path from 'path';
 
 export async function GET() {
-  const modelsDir = path.join(process.cwd(), 'data/models');
-  const makesConfigPath = path.join(process.cwd(), 'data/makes.json');
-
   try {
-    // Читаем конфиг с красивыми названиями
-    let makesConfig: any[] = [];
-    try {
-      const configData = await fs.readFile(makesConfigPath, 'utf-8');
-      makesConfig = JSON.parse(configData);
-    } catch (e) {
-      makesConfig = [];
-    }
-
-    try {
-      await fs.access(modelsDir);
-    } catch {
-      await fs.mkdir(modelsDir, { recursive: true });
-    }
-
-    const files = await fs.readdir(modelsDir);
-    const jsonFiles = files.filter(f => f.endsWith('.json'));
+    // Список файлов, который точно есть
+    const knownFiles = [
+      '7.json', '8.json', 'aqua.json', 'aura.json', 'bike(bmw).json', 'bmw.json',
+      'c.json', 'crown.json', 'gclass.json', 'glcclass.json', 'gt.json', 'honda.json',
+      'land-rover.json', 'land.json', 'lexus.json', 'mercedes.json', 'nissan.json',
+      'nv200vanette.json', 'raize.json', 's.json', 'subaru.json', 'suzuki.json',
+      'toyota.json', 'x3.json', 'x5.json', 'x6.json', 'x7.json', 'yaris.json'
+    ];
     
-    const results = [];
+    // Удаляем .json из названий для получения слагов
+    const brands = knownFiles
+      .filter(file => file.endsWith('.json'))
+      .map(file => {
+        const slug = file.replace('.json', '');
+        const name = slug.charAt(0).toUpperCase() + slug.slice(1).replace('-', ' ');
+        return { slug, name, modelsCount: 0 }; // modelsCount будет обновлён ниже
+      });
 
-    for (const file of jsonFiles) {
-      const makeSlug = file.replace('.json', '');
-      const filePath = path.join(modelsDir, file);
-      
+    // Теперь посчитаем количество моделей для каждого бренда
+    const modelsDir = path.join(process.cwd(), 'data/models');
+    
+    for (const brand of brands) {
       try {
+        const filePath = path.join(modelsDir, `${brand.slug}.json`);
         const content = await fs.readFile(filePath, 'utf-8');
         const cars = JSON.parse(content);
         
-        if (Array.isArray(cars) && cars.length > 0) {
-          const configEntry = makesConfig.find((m: any) => m.slug === makeSlug);
-          
-          // Подсчитываем количество машин по аукционным оценкам
-          const gradeCounts: Record<string, number> = {};
-          cars.forEach((car: any) => {
-            const grade = car.auctionGrade || 'Не указана';
-            gradeCounts[grade] = (gradeCounts[grade] || 0) + 1;
-          });
-          
-          results.push({
-            slug: makeSlug,
-            name: configEntry ? configEntry.name : makeSlug.charAt(0).toUpperCase() + makeSlug.slice(1),
-            modelsCount: cars.length,
-            grades: gradeCounts
-          });
+        if (Array.isArray(cars)) {
+          brand.modelsCount = cars.length;
         }
       } catch (err) {
-        console.error(`Error processing ${file}:`, err);
+        console.error(`Error reading ${brand.slug}.json:`, err);
+        // Оставляем modelsCount = 0, если файл не найден или ошибка
       }
     }
 
-    // Сортируем по количеству (по убыванию) или по имени
-    results.sort((a, b) => b.modelsCount - a.modelsCount);
+    // Отфильтровываем бренды без моделей и сортируем
+    const validBrands = brands
+      .filter(brand => brand.modelsCount > 0)
+      .sort((a, b) => b.modelsCount - a.modelsCount);
 
-    return NextResponse.json(results);
+    return NextResponse.json(validBrands);
   } catch (error) {
     console.error('Ошибка получения списка марок:', error);
-    return NextResponse.json({ error: 'Ошибка сервера' }, { status: 500 });
+    return NextResponse.json([], { status: 500 });
   }
 }

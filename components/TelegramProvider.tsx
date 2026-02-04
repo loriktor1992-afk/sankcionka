@@ -6,8 +6,7 @@ import {
   miniApp, 
   viewport, 
   postEvent,
-  isTMA,
-  retrieveLaunchParams
+  isTMA
 } from '@telegram-apps/sdk';
 
 export default function TelegramProvider({ children }: { children: React.ReactNode }) {
@@ -15,9 +14,6 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
     // Check if we are in Telegram
     if (typeof window !== 'undefined' && isTMA()) {
       try {
-        // Retrieve launch params to ensure we're in Telegram
-        retrieveLaunchParams();
-        
         // Initialize the SDK
         init();
 

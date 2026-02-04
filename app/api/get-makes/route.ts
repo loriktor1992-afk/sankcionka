@@ -16,7 +16,9 @@ export async function GET() {
       makesConfig = [];
     }
 
-    if (!fs.stat(modelsDir).then(s => s.isDirectory()).catch(() => false)) {
+    try {
+      await fs.access(modelsDir);
+    } catch {
       await fs.mkdir(modelsDir, { recursive: true });
     }
 
